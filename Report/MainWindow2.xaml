@@ -25,7 +25,7 @@
         </Grid.ColumnDefinitions>
         <StackPanel Height="404" VerticalAlignment="Top">
             <Button x:Name="btnAdd" Click="btnAdd__Click" Content="Добавить" Background="#FFE1E4EA"/>
-            <Button x:Name="btnEdit" Click="btnEdit_Click" Content="Изменить" Background="#FF78A3E4"/>
+            <Button x:Name="btnEdit" Click="btnEdit_Click" Content="Сохранить" Background="#FF78A3E4"/>
             <Button x:Name="btnRemove" Click="btnRemove_Click" Content="Удалить" Background="#FFC58BA6"/>
             <Button x:Name="btnExsport" Click="Exsport_Click" Content="Экспорте в Excel" Background="#FF87AB6F"/>
             <Button x:Name="btnImport" Click="btnImport_Clickbtn" Content="Импорт из Excel" Background="#FF6FABAA"/>
@@ -39,11 +39,11 @@
                 <DataGridTextColumn Header="Пистолет" Binding="{Binding Gun}" Width="*"/>
                 <DataGridTextColumn Header="№Автомат" Binding="{Binding Automaton_serial}" Width="*"/>
                 <DataGridTextColumn Header="Автомат" Binding="{Binding Automaton}" Width="*"/>
-                <DataGridTextColumn Header="Значение" Binding="{Binding Permission}" Width="*"/>
-                <DataGridTextColumn Header="Разрешение" Binding="{Binding Meaning}" Width="*"/>
+                <DataGridTextColumn Header="Разрешение" Binding="{Binding Permission}" Width="*"/>
+                <DataGridTextColumn Header="Доверенность" Binding="{Binding Power}" Width="*"/>
                 <DataGridTextColumn Header="Удостоверение" Binding="{Binding Certificate}" Width="*"/>
                 <DataGridTextColumn Header="Жетон" Binding="{Binding Token}" Width="*"/>
-                <DataGridTextColumn Header="Доверенность" Binding="{Binding Power}" Width="*"/>
+                <DataGridTextColumn Header="Бронежилет" Binding="{Binding Meaning}" Width="*"/>
             </DataGrid.Columns>
         </DataGrid>
         <TextBox Grid.Column="1" x:Name="Name" HorizontalAlignment="Left" Margin="0,3,0,0" TextWrapping="Wrap"  VerticalAlignment="Top" Width="166"/>

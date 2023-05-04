@@ -23,6 +23,7 @@ namespace Report
         public String Certificate { get; set; }
         public String Token { get; set; }
         public String Power { get; set; }
+        public String Armor { get; set; }
 
         static SQLiteConnection connection;
 
@@ -62,6 +63,7 @@ namespace Report
                     var certificate = reader.GetString(7);
                     var token = reader.GetString(8);
                     var power = reader.GetString(9);
+                    var armor = reader.GetString(10);
                     var collector = new Collector2
                     {
                         Id = id,
@@ -73,7 +75,8 @@ namespace Report
                         Meaning = meaning,
                         Certificate = certificate,
                         Token = token,
-                        Power = power
+                        Power = power,
+                        Armor= armor,
                     };
                     yield return collector;
                 }
@@ -84,7 +87,7 @@ namespace Report
 
         public void Update()
         {
-            var commandString = "UPDATE Collectors2 SET Name=@name, Gun=@gun, Automaton_serial=@automaton_serial, Automaton=@automaton, Permission=@permission, Meaning=@meaning, Certificate=@certificate, Token=@token, Power=@power WHERE(Id = @id)";
+            var commandString = "UPDATE Collectors2 SET Name=@name, Gun=@gun, Automaton_serial=@automaton_serial, Automaton=@automaton, Permission=@permission, Meaning=@meaning, Certificate=@certificate, Token=@token, Power=@power, Armor=@armor WHERE(Id = @id)";
             SQLiteCommand updateCommand = new SQLiteCommand(commandString, connection);
             updateCommand.Parameters.AddRange(new SQLiteParameter[] {
            new SQLiteParameter("name", Name),
@@ -96,12 +99,14 @@ namespace Report
            new SQLiteParameter("certificate", Certificate),
            new SQLiteParameter("token", Token),
            new SQLiteParameter("power", Power),
+           new SQLiteParameter("armor",Armor),
            new SQLiteParameter("id", Id)
-    });
+    });;;
             connection.Open();
             updateCommand.ExecuteNonQuery();
             connection.Close();
         }
+
     }
 }
 

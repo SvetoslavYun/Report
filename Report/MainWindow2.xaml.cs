@@ -90,6 +90,7 @@ namespace Report
                 }
                 FillData();
             }
+            FillData();
         }
 
 
@@ -99,6 +100,8 @@ namespace Report
 
         private void Exsport_Click(object sender, RoutedEventArgs e)
         {
+            try 
+            { 
             Excel.Application excel = new Excel.Application();
             excel.Visible = true;
             Workbook workbook = excel.Workbooks.Add(System.Reflection.Missing.Value);
@@ -111,6 +114,7 @@ namespace Report
                 sheet1.Cells[1, j + 1].Font.Bold = true;
                 sheet1.Cells[1, j + 1].HorizontalAlignment = XlHAlign.xlHAlignCenter;
                 myRange.Value2 = dGrid.Columns[j].Header;
+
             }
 
             //Заполнение ячеек таблицы
@@ -125,14 +129,26 @@ namespace Report
                         Range myRange = (Range)sheet1.Cells[i + 2, j + 1];
                         myRange.Value2 = b.Text;
                         myRange.HorizontalAlignment = XlHAlign.xlHAlignCenter;
-                    }
+                            // Установить стиль рамки для ячейки
+                            myRange.Borders.LineStyle = XlLineStyle.xlContinuous;
+                            myRange.Borders.Weight = XlBorderWeight.xlThin;
+                        }
                 }
             }
 
             // автоматическое подгонение ширины колонок под содержимое
             Range usedRange = sheet1.UsedRange;
             usedRange.Columns.AutoFit();
+            // Установить первую строку как сквозную строку при печати
+            sheet1.PageSetup.PrintTitleRows = "$1:$1";
+           
+            sheet1.PageSetup.RightHeader = "&\"Arial\"&10&K000000" + "sviatoslavyun@gmail.com";
         }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+       }
 
 
 
@@ -196,13 +212,48 @@ namespace Report
             return child;
         }
 
-        private void btnAdd__Click(object sender, RoutedEventArgs e)
+        private void btnAdd__Click2(object sender, RoutedEventArgs e)
         {
             BD_Form bd_Form = new BD_Form();
             bd_Form.Owner = this;//первичное окно назначаем главным
             bd_Form.Show();//ждет закрытия окна
             FillData();
         }
+
+
+           private void btnAdd__Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Collector collector = new Collector
+            {
+                Name = "",
+                Gun = "",
+                Automaton_serial = "",
+                Automaton = "",
+                Permission = "",
+                Meaning = "",
+                Certificate = "",
+                Token = "",
+                Power = ""
+            };
+            collector.Insert();
+            var collectors = dGrid.ItemsSource as ObservableCollection<Collector>;
+            collectors?.Add(collector);
+            int lastIndex = collectors.Count - 1;
+            dGrid.SelectedItem = collectors[lastIndex];
+            dGrid.ScrollIntoView(dGrid.SelectedItem);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+     
+
+
+
 
         private void btnImport_Clickbtn(object sender, RoutedEventArgs e)
         {
@@ -350,6 +401,7 @@ namespace Report
             {
                 MessageBox.Show(ex.Message);
             }
+            FillData();
         }
 
   

@@ -23,6 +23,8 @@ using System.Xml.Linq;
 using System.Windows.Input;
 using Newtonsoft.Json.Linq;
 using System.Windows.Threading;
+using Color = System.Drawing.Color;
+using System.Drawing;
 
 namespace Report
 {
@@ -40,6 +42,7 @@ namespace Report
             dGrid.DataContext = Collectors;
             FillData();
             Name.TextChanged += SearchButton_Click;
+            Automaton.TextChanged += SearchButton_Click2;
             datePicker1.SelectedDate = DateTime.Today;
             DispatcherTimer timer = new DispatcherTimer();
             timer.Interval = TimeSpan.FromSeconds(1);
@@ -111,21 +114,15 @@ namespace Report
 
         private void Exsport_Click(object sender, RoutedEventArgs e)
         {
-            Excel.Application excel = new Excel.Application();
+            Name.Text = "";
+            Automaton.Text = "";
+            try {
+               
+                Excel.Application excel = new Excel.Application();
             excel.Visible = true;
             Workbook workbook = excel.Workbooks.Add(System.Reflection.Missing.Value);
             Worksheet sheet1 = (Worksheet)workbook.Sheets[1];
-
-            // Заполнение заголовков
-            Range dateHeader = (Range)sheet1.Cells[1, 10];
-            dateHeader.Value2 = "Дата";
-            dateHeader.Font.Bold = true;
-            dateHeader.HorizontalAlignment = XlHAlign.xlHAlignCenter;
-
-            Range rospisHeader = (Range)sheet1.Cells[1, 11];
-            rospisHeader.Value2 = "Подпись";
-            rospisHeader.Font.Bold = true;
-            rospisHeader.HorizontalAlignment = XlHAlign.xlHAlignCenter;
+           
 
             for (int j = 0; j < dGrid.Columns.Count; j++)
             {
@@ -135,15 +132,14 @@ namespace Report
                 myRange.Value2 = dGrid.Columns[j].Header;
             }
 
-            // Заполнение ячеек таблицы
-            for (int i = 0; i < dGrid.Items.Count; i++)
-            {
-                string date = ""; // Заменить на значение даты, которую необходимо выгрузить
-                Range dateCell = (Range)sheet1.Cells[i + 2, 10];
-                dateCell.Value2 = date.ToString();
 
-                Range rospisCell = (Range)sheet1.Cells[i + 2, 11];
-                rospisCell.Value2 = "";
+                // Отслеживаем повторяющиеся значения в 4 столбце (Automaton)
+                HashSet<string> automatonValues = new HashSet<string>();
+
+                // Заполнение ячеек
+                for (int i = 0; i < dGrid.Items.Count; i++)
+            {
+              
 
                 for (int j = 0; j < dGrid.Columns.Count; j++)
                 {
@@ -154,28 +150,64 @@ namespace Report
                         Range myRange = (Range)sheet1.Cells[i + 2, j + 1];
                         myRange.Value2 = b.Text;
                         myRange.HorizontalAlignment = XlHAlign.xlHAlignCenter;
+
+                        // Установка стиля рамки ячейки
+                        myRange.Borders.LineStyle = XlLineStyle.xlContinuous;
+                        myRange.Borders.Weight = XlBorderWeight.xlThin;
+
+                        // Установка стиля шрифта для ячейки
+                        if (j == 0 || j == 5)
+                        {
+                            myRange.Font.Bold = true;
+                            myRange.Font.Size = 11;
+                        }
+
+                        // Подсветка повторяющихся значений в 4 столбце (Automaton) серым
+                        if (j == 3 && !string.IsNullOrEmpty(b.Text))
+                        {
+                            if (automatonValues.Contains(b.Text))
+                            {
+                                myRange.Interior.Color = ColorTranslator.ToOle(Color.LightGray);
+                            }
+                            else
+                            {
+                                automatonValues.Add(b.Text);
+                            }
+                        }
                     }
                 }
             }
 
-            // Удаление строк 1 и 3
-            Range row1 = (Range)sheet1.Rows[2];
-            row1.Delete();
+ 
+                // Удаление строк 2, 3 и 4
 
-            Range row3 = (Range)sheet1.Rows[4];
+                Range row2 = (Range)sheet1.Rows[2];
+            row2.Delete();
+
+            Range row3 = (Range)sheet1.Rows[3];
             row3.Delete();
+
+            Range row4 = (Range)sheet1.Rows[4];
+            row4.Delete();
 
             // Автоматическое подгонение ширины колонок под содержимое
             for (int j = 1; j <= dGrid.Columns.Count + 1; j++)
             {
                 Range column = (Range)sheet1.Columns[j];
                 column.ColumnWidth = 15;
-                Range dateColumn = (Range)sheet1.Columns[5];
-                dateColumn.ColumnWidth = 8.71;
-
             }
-        }
+            // Установить первую строку как сквозную строку при печати
+            sheet1.PageSetup.PrintTitleRows = "$1:$1";
+            // Перейти в режим разметки страницы
+            excel.ActiveWindow.View = XlWindowView.xlPageLayoutView;
+            sheet1.PageSetup.RightHeader = "&\"Arial\"&10&K000000" + "sviatoslavyun@gmail.com";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
 
+        }
 
 
 
@@ -290,11 +322,13 @@ namespace Report
             {
                 // вызов метода для импорта данных из Excel в базу данных
                 ImportExcelToDatabase(openFileDialog.FileName);
+            
             }
 
             FillData();
         }
 
+       
 
         private void ImportExcelToDatabase(string filePath)
         {
@@ -303,6 +337,9 @@ namespace Report
                 ClearTable();
                 int a = 0;
                 int b = 0;
+                int c = 0;
+                int d = 0;
+                string name2="t65%^";
                 // строка подключения к базе данных SQLite
                 string connectionString = @"Data Source=Uspeh.db;Version=3;";
                 // создание объекта подключения
@@ -330,7 +367,7 @@ namespace Report
                     Excel.Range range = worksheet.UsedRange;
 
                     // создание SQL-запроса для вставки данных в таблицу Collectors2
-                    string insertQuery = "INSERT INTO Collectors2 (Name, Gun, Automaton_serial, Automaton, Permission, Meaning, Certificate, Token, Power) VALUES (@Name, @Gun, @Automaton_serial, @Automaton, @Permission, @Meaning, @Certificate, @Token, @Power)";
+                    string insertQuery = "INSERT INTO Collectors2 (Name, Gun, Automaton_serial, Automaton, Permission, Meaning, Certificate, Token, Power, Armor) VALUES (@Name, @Gun, @Automaton_serial, @Automaton, @Permission, @Meaning, @Certificate, @Token, @Power, @Armor)";
 
 
 
@@ -348,12 +385,15 @@ namespace Report
                     command.Parameters.Add(new SQLiteParameter("@Certificate", DbType.String));
                     command.Parameters.Add(new SQLiteParameter("@Token", DbType.String));
                     command.Parameters.Add(new SQLiteParameter("@Power", DbType.String));
+                    command.Parameters.Add(new SQLiteParameter("@Armor", DbType.String));
 
 
 
                     // проход по строкам диапазона
-                    for (int row = 2; row <= range.Rows.Count; row++)
+                    for (int row = 1; row <= range.Rows.Count; row++)
                     {
+                        if (range.Cells[row, 2].Value2 == "водитель автомобиля") { c = 2; };
+                        if (range.Cells[row, 2].Value2 == "инкассатор-сборщик") { d = 2; };
                         if (range.Cells[row, 3].Value2 != null) { a = 3; b = 1; };
                         if (range.Cells[row, 3].Value2 == null) { a = 2; b = 2; };
                         // проверка наличия значения в столбце Name диапазона
@@ -371,7 +411,7 @@ namespace Report
                             string token = "";
                             string power = "";
 
-                            string selectQuery2 = "SELECT Gun, Automaton_serial, Automaton, Permission, Meaning, Certificate, Token, Power FROM Collectors WHERE Name=@Name";
+                            string selectQuery2 = "SELECT Gun, Automaton_serial, Automaton, Permission, Meaning, Certificate, Token, Power FROM Collectors WHERE REPLACE(REPLACE(Name, ' ', ''), '.', '') = REPLACE(REPLACE(@Name, ' ', ''), '.', '')";
 
 
                             SQLiteCommand selectCommand2 = new SQLiteCommand(selectQuery2, connection);
@@ -395,37 +435,57 @@ namespace Report
                                 token = reader2.GetString(6);
                                 power = reader2.GetString(7);
                             }
-                            reader2.Close();
-                            if (b == 2) { permission = name; name = "_______________________"; gun = "_______________________"; automatonSerial = "___________________________________________________________________________________________________________________________________"; automaton = ""; meaning = ""; certificate = "________________________________________________________________________________________________"; token = "_______________________"; power = "__________________________________________________________________"; }
-                            // привязка значений параметров в SQL-запрос вставки данных
-                            command.Parameters["@Name"].Value = name;
-                            command.Parameters["@Gun"].Value = gun;
-                            command.Parameters["@Automaton_serial"].Value = automatonSerial;
-                            command.Parameters["@Automaton"].Value = automaton;
-                            command.Parameters["@Permission"].Value = permission;
-                            command.Parameters["@Meaning"].Value = meaning;
-                            command.Parameters["@Certificate"].Value = certificate;
-                            command.Parameters["@Token"].Value = token;
-                            command.Parameters["@Power"].Value = power;
 
-                            // выполнение SQL-запроса вставки данных
-                            command.ExecuteNonQuery();
+                            if (name == "-2146826265" || name == "" || name == "старший бригады инкассаторов" || name == "инкассатор-сборщик" || name == "водитель автомобиля" || name == "Фамилия и инициалы работника службы инкассации" || name == " " || name == "  " || name == "Резеерв" || name == "Резерв")
+                            {
+                                continue;
+                            }
+                            if (name != ".")
+                            {
+                                if (name2 == name) { automaton = " " + automaton; } else { automaton = automaton; }
+                                if (b == 2) { automatonSerial = name; certificate = name; name = ""; }
+                                if (c == 2) { automaton = automaton; name2 = name; } else { automaton = ""; }
+                                if (d == 2) { power = power; } else { power = ""; }
 
+                         
+                                // привязка значений параметров в SQL-запрос вставки данных
+                                command.Parameters["@Name"].Value = name;
+                                command.Parameters["@Gun"].Value = gun;
+                                command.Parameters["@Automaton_serial"].Value = automatonSerial;
+                                command.Parameters["@Automaton"].Value = automaton;
+                                command.Parameters["@Permission"].Value = permission;
+                                command.Parameters["@Meaning"].Value = name;
+                                command.Parameters["@Certificate"].Value = certificate;
+                                command.Parameters["@Token"].Value = token;
+                                command.Parameters["@Power"].Value = power;
+                                command.Parameters["@Armor"].Value = meaning;
+
+                                // выполнение SQL-запроса вставки данных
+                                command.ExecuteNonQuery();
+                                c = 0; d = 0;
+                                reader2.Close();
+                            }
+                            else
+                            {  // закрытие книги Excel
+                                workbook.Close(false);
+
+                                // закрытие приложения Excel
+                                excel.Quit();
+                            }
                         }
                     }
 
-                    // закрытие книги Excel
-                    workbook.Close(false);
-
-                    // закрытие приложения Excel
-                    excel.Quit();
+                  
                 }
             }
-            catch (Exception ex)
+            catch 
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show("Данные добавленны");
             }
         }
+
+
+     
 
         //private void ImportExcelToDatabase(string filePath)
         //{
@@ -579,7 +639,8 @@ namespace Report
                             Meaning = reader["meaning"].ToString(),
                             Certificate = reader["certificate"].ToString(),
                             Token = reader["token"].ToString(),
-                            Power = reader["power"].ToString()
+                            Power = reader["power"].ToString(),
+                            Armor = reader["armor"].ToString()
                         };
                         collectors.Add(collector);
                     }
@@ -592,6 +653,51 @@ namespace Report
                 MessageBox.Show(ex.Message);
             }
         }
+
+        private void SearchButton_Click2(object sender, TextChangedEventArgs e)
+        {
+            try
+            {
+                // строка подключения к базе данных SQLite
+                string connectionString = @"Data Source=Uspeh.db;Version=3;";
+                string searchTerm = Automaton.Text;
+                List<Collector2> collectors = new List<Collector2>();
+
+                using (var connection = new SQLiteConnection(connectionString))
+                {
+                    connection.Open();
+
+                    var command = new SQLiteCommand($"SELECT * FROM collectors2 WHERE automaton LIKE '%{searchTerm}%'", connection);
+                    var reader = command.ExecuteReader();
+
+                    while (reader.Read())
+                    {
+                        Collector2 collector = new Collector2
+                        {
+                            Id = Convert.ToInt32(reader["id"]),
+                            Name = reader["name"].ToString(),
+                            Gun = reader["gun"].ToString(),
+                            Automaton_serial = reader["automaton_serial"].ToString(),
+                            Automaton = reader["automaton"].ToString(),
+                            Permission = reader["permission"].ToString(),
+                            Meaning = reader["meaning"].ToString(),
+                            Certificate = reader["certificate"].ToString(),
+                            Token = reader["token"].ToString(),
+                            Power = reader["power"].ToString(),
+                            Armor = reader["armor"].ToString()
+                        };
+                        collectors.Add(collector);
+                    }
+                }
+
+                dGrid.ItemsSource = collectors;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
 
 
         private void btnEdit_Click(object sender, RoutedEventArgs e)
