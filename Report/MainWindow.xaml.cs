@@ -25,6 +25,7 @@ using Newtonsoft.Json.Linq;
 using System.Windows.Threading;
 using Color = System.Drawing.Color;
 using System.Drawing;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace Report
 {
@@ -63,10 +64,17 @@ namespace Report
             }
         }
 
+        private Dictionary<string, bool> previousAutomatons = new Dictionary<string, bool>(); // словарь предыдущих значений Automaton
+
         private void dGrid_LoadingRow(object sender, DataGridRowEventArgs e)
         {
-            e.Row.Header = e.Row.GetIndex() + 1;
+            Collector2 rowContext = e.Row.DataContext as Collector2;
+            e.Row.Header = e.Row.GetIndex() + 1;        
         }
+
+
+
+
 
         private void btnRemove_Click(object sender, RoutedEventArgs e)
         {
@@ -667,26 +675,65 @@ namespace Report
                 {
                     connection.Open();
 
-                    var command = new SQLiteCommand($"SELECT * FROM collectors2 WHERE automaton LIKE '%{searchTerm}%'", connection);
-                    var reader = command.ExecuteReader();
-
-                    while (reader.Read())
+                    if (!string.IsNullOrWhiteSpace(searchTerm))
                     {
-                        Collector2 collector = new Collector2
+                        // Первый запрос на поиск записей в таблице "collectors" по полю "Name"
+                        var command1 = new SQLiteCommand($"SELECT * FROM collectors WHERE Name LIKE '%{searchTerm}%'", connection);
+                        var reader1 = command1.ExecuteReader();
+
+                        while (reader1.Read())
                         {
-                            Id = Convert.ToInt32(reader["id"]),
-                            Name = reader["name"].ToString(),
-                            Gun = reader["gun"].ToString(),
-                            Automaton_serial = reader["automaton_serial"].ToString(),
-                            Automaton = reader["automaton"].ToString(),
-                            Permission = reader["permission"].ToString(),
-                            Meaning = reader["meaning"].ToString(),
-                            Certificate = reader["certificate"].ToString(),
-                            Token = reader["token"].ToString(),
-                            Power = reader["power"].ToString(),
-                            Armor = reader["armor"].ToString()
-                        };
-                        collectors.Add(collector);
+                            // Получаем значение поля "Automaton" из найденной записи
+                            string automatonValue = reader1["Automaton"].ToString();
+
+                            // Второй запрос на поиск записей в таблице "collectors2" по полю "Automaton"
+                            var command2 = new SQLiteCommand($"SELECT * FROM collectors2 WHERE Automaton LIKE '%{automatonValue}%'", connection);
+                            var reader2 = command2.ExecuteReader();
+                            Automaton2.Text=automatonValue;
+                            while (reader2.Read())
+                            {
+                                Collector2 collector = new Collector2
+                                {
+                                    Id = Convert.ToInt32(reader2["id"]),
+                                    Name = reader2["name"].ToString(),
+                                    Gun = reader2["gun"].ToString(),
+                                    Automaton_serial = reader2["automaton_serial"].ToString(),
+                                    Automaton = reader2["automaton"].ToString(),
+                                    Permission = reader2["permission"].ToString(),
+                                    Meaning = reader2["meaning"].ToString(),
+                                    Certificate = reader2["certificate"].ToString(),
+                                    Token = reader2["token"].ToString(),
+                                    Power = reader2["power"].ToString(),
+                                    Armor = reader2["armor"].ToString()
+                                };
+                                collectors.Add(collector);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Если значение поля "Automaton" пустое, выводим все записи из таблицы "collectors2"
+                        var command = new SQLiteCommand("SELECT * FROM collectors2", connection);
+                        var reader = command.ExecuteReader();
+
+                        while (reader.Read())
+                        {
+                            Collector2 collector = new Collector2
+                            {
+                                Id = Convert.ToInt32(reader["id"]),
+                                Name = reader["name"].ToString(),
+                                Gun = reader["gun"].ToString(),
+                                Automaton_serial = reader["automaton_serial"].ToString(),
+                                Automaton = reader["automaton"].ToString(),
+                                Permission = reader["permission"].ToString(),
+                                Meaning = reader["meaning"].ToString(),
+                                Certificate = reader["certificate"].ToString(),
+                                Token = reader["token"].ToString(),
+                                Power = reader["power"].ToString(),
+                                Armor = reader["armor"].ToString()
+                            };
+                            collectors.Add(collector);
+                        }
                     }
                 }
 
@@ -697,6 +744,7 @@ namespace Report
                 MessageBox.Show(ex.Message);
             }
         }
+
 
 
 
@@ -790,6 +838,11 @@ namespace Report
                 // закрываем соединение
                 connection.Close();
             }
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Name.Text= string.Empty; Automaton.Text= string.Empty; Automaton2.Text= string.Empty;
         }
     }
 }

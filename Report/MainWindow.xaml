@@ -5,7 +5,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:Report"
     mc:Ignorable="d"
-    Title="Наряд" Height="450" Width="800"  Closing="Window_Closing">
+    Title="Наряд" Height="450" Width="950"  Closing="Window_Closing">
     <!--<Window.Icon>
         
         <BitmapImage UriSource="C:\Users\user\Downloads\Icon.ico" />
@@ -35,6 +35,7 @@
             <Button x:Name="btnImport" Click="btnImport_Clickbtn" Content="Импорт из Excel" Background="#FF6FABAA"/>
             <DatePicker x:Name="datePicker1"/>
 
+
         </StackPanel>
         <DataGrid x:Name="dGrid" CanUserSortColumns="False" Grid.Column="1" ItemsSource="{Binding}" 
     AutoGenerateColumns="False" LoadingRow="dGrid_LoadingRow" RowHeaderWidth="50"
@@ -61,5 +62,7 @@
 
         <TextBlock  Text="{Binding Path=Now, StringFormat={}{0:dd.MM.yyyy HH:mm:ss}}" Grid.Column="1" HorizontalAlignment="Right" Margin="0,4,162,0" TextWrapping="Wrap" Width="178" Foreground="#FFEDDBDB" Height="16" VerticalAlignment="Top" FontSize="14"/>
         <TextBox Grid.Column="1" x:Name="Automaton" HorizontalAlignment="Left" Margin="139,3,0,0" TextWrapping="Wrap"  VerticalAlignment="Top" Width="134"/>
+        <TextBox x:Name="Automaton2" TextWrapping="Wrap" Grid.Column="1" Margin="278,3,0,0" Height="18" VerticalAlignment="Top" HorizontalAlignment="Left" Width="112"/>
+        <Button Grid.Column="1" Content="Clear" HorizontalAlignment="Left" Margin="399,2,0,0" VerticalAlignment="Top" Background="#FF92A1A4" Click="Button_Click"/>
     </Grid>
 </Window>
