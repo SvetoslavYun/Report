@@ -5,7 +5,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:Report"
     mc:Ignorable="d"
-    Title="Наряд" Height="450" Width="950"  Closing="Window_Closing">
+    Title="Наряд" Height="450" Width="800"  Closing="Window_Closing">
     <!--<Window.Icon>
         
         <BitmapImage UriSource="C:\Users\user\Downloads\Icon.ico" />
@@ -34,7 +34,13 @@
             <Button x:Name="btnExsport" Click="Exsport_Click" Content="Экспорте в Excel" Background="#FF87AB6F"/>
             <Button x:Name="btnImport" Click="btnImport_Clickbtn" Content="Импорт из Excel" Background="#FF6FABAA"/>
             <DatePicker x:Name="datePicker1"/>
-
+            <TextBlock TextWrapping="Wrap" Text="Ф.И.О" Foreground="#FFD3DBEC" HorizontalAlignment="Center"/>
+            <TextBox x:Name="Automaton" TextWrapping="Wrap" Width="110"/>
+            <TextBlock TextWrapping="Wrap" Text="№Автомат" HorizontalAlignment="Center" Foreground="#FFF2F5F5"/>
+            <TextBox x:Name="Automaton_serial" TextWrapping="Wrap" Height="18" Width="110"/>
+            <TextBlock TextWrapping="Wrap" Text="Автомат" HorizontalAlignment="Center" Foreground="#FFF5E9E9"/>
+            <TextBox x:Name="Automaton2" TextWrapping="Wrap" Height="18" Width="109"/>
+            <Button Content="Изменить" Background="#FFC8C45C" Click="Button_Click" Width="78"/>
 
         </StackPanel>
         <DataGrid x:Name="dGrid" CanUserSortColumns="False" Grid.Column="1" ItemsSource="{Binding}" 
@@ -60,9 +66,7 @@
         <TextBlock HorizontalAlignment="Right" Margin="0,0,58,2" TextWrapping="Wrap" Text="v. 1.0.0" Height="16" VerticalAlignment="Bottom"/>
         <TextBlock Grid.Column="1" Margin="0,5,0,0" TextWrapping="Wrap" Text="sviatoslavyun@gmail.com" VerticalAlignment="Top" Foreground="#FFCBD8F5" HorizontalAlignment="Right" Width="148" FontSize="11"/>
 
-        <TextBlock  Text="{Binding Path=Now, StringFormat={}{0:dd.MM.yyyy HH:mm:ss}}" Grid.Column="1" HorizontalAlignment="Right" Margin="0,4,162,0" TextWrapping="Wrap" Width="178" Foreground="#FFEDDBDB" Height="16" VerticalAlignment="Top" FontSize="14"/>
-        <TextBox Grid.Column="1" x:Name="Automaton" HorizontalAlignment="Left" Margin="139,3,0,0" TextWrapping="Wrap"  VerticalAlignment="Top" Width="134"/>
-        <TextBox x:Name="Automaton2" TextWrapping="Wrap" Grid.Column="1" Margin="278,3,0,0" Height="18" VerticalAlignment="Top" HorizontalAlignment="Left" Width="112"/>
-        <Button Grid.Column="1" Content="Clear" HorizontalAlignment="Left" Margin="399,2,0,0" VerticalAlignment="Top" Background="#FF92A1A4" Click="Button_Click"/>
+        <TextBlock  Text="{Binding Path=Now, StringFormat={}{0:dd.MM.yyyy HH:mm:ss}}" Grid.Column="1" HorizontalAlignment="Right" Margin="0,3,232,0" TextWrapping="Wrap" Width="178" Foreground="#FFEDDBDB" Height="16" VerticalAlignment="Top" FontSize="14"/>
+        <Button Grid.Column="1" Content="Clear" HorizontalAlignment="Left" Margin="139,4,0,0" VerticalAlignment="Top" Background="#FF92A1A4" Click="Button_Click2" Width="33" Height="17"/>
     </Grid>
 </Window>

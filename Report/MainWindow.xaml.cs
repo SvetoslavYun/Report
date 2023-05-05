@@ -68,7 +68,6 @@ namespace Report
 
         private void dGrid_LoadingRow(object sender, DataGridRowEventArgs e)
         {
-            Collector2 rowContext = e.Row.DataContext as Collector2;
             e.Row.Header = e.Row.GetIndex() + 1;        
         }
 
@@ -663,7 +662,7 @@ namespace Report
         }
 
         private void SearchButton_Click2(object sender, TextChangedEventArgs e)
-        {
+        {         
             try
             {
                 // строка подключения к базе данных SQLite
@@ -685,13 +684,16 @@ namespace Report
                         {
                             // Получаем значение поля "Automaton" из найденной записи
                             string automatonValue = reader1["Automaton"].ToString();
+                            string automaton_serialValue = reader1["Automaton_serial"].ToString();
 
                             // Второй запрос на поиск записей в таблице "collectors2" по полю "Automaton"
                             var command2 = new SQLiteCommand($"SELECT * FROM collectors2 WHERE Automaton LIKE '%{automatonValue}%'", connection);
                             var reader2 = command2.ExecuteReader();
                             Automaton2.Text=automatonValue;
+                            Automaton_serial.Text = automaton_serialValue;
                             while (reader2.Read())
                             {
+                                int a = 0;
                                 Collector2 collector = new Collector2
                                 {
                                     Id = Convert.ToInt32(reader2["id"]),
@@ -705,10 +707,22 @@ namespace Report
                                     Token = reader2["token"].ToString(),
                                     Power = reader2["power"].ToString(),
                                     Armor = reader2["armor"].ToString()
-                                };
+                                };  
+                                
                                 collectors.Add(collector);
+                              
                             }
+                          
                         }
+                        if (collectors.Count == 0)
+                        {
+                            MessageBox.Show("Автомат не пересекается");
+                        }
+                        else
+                        {
+                            MessageBox.Show("Автомат пересекается");
+                        }
+
                     }
                     else
                     {
@@ -842,7 +856,73 @@ namespace Report
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            Name.Text= string.Empty; Automaton.Text= string.Empty; Automaton2.Text= string.Empty;
+            
+          
+
+            UpdateCollector2();
+            UpdateCollector();
+            Name.Text= string.Empty; Automaton.Text= string.Empty; Automaton2.Text= string.Empty; Automaton_serial.Text= string.Empty;
+        }
+
+        private void UpdateCollector2()
+        {
+            if (dGrid.Items.Count == 0)
+            {
+
+                string connectionString = "Data Source=Uspeh.db";
+
+                using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+                {
+                    connection.Open();
+
+                    string sql = "UPDATE Collectors2 SET Automaton_serial = @automatonSerial, Automaton = @automaton WHERE Name = @name ORDER BY ID ASC LIMIT 1";
+                    using (SQLiteCommand command = new SQLiteCommand(sql, connection))
+                    {
+                        command.Parameters.AddWithValue("@automatonSerial", Automaton_serial.Text);
+                        command.Parameters.AddWithValue("@automaton", Automaton2.Text);
+                        command.Parameters.AddWithValue("@name", Automaton.Text);
+                        command.ExecuteNonQuery();
+
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show("Автомат пересекается данные не могут быть вставленны");
+            }
+        }
+
+        private void UpdateCollector()
+        {
+            if (dGrid.Items.Count == 0)
+            {
+                string connectionString = "Data Source=Uspeh.db";
+
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+
+                string sql = "UPDATE Collectors2 SET Automaton_serial = @automatonSerial, Automaton = @automaton WHERE Name = @name ORDER BY ID ASC LIMIT 1 OFFSET 1";
+                using (SQLiteCommand command = new SQLiteCommand(sql, connection))
+                {
+                    command.Parameters.AddWithValue("@automatonSerial", Automaton_serial.Text);
+                    command.Parameters.AddWithValue("@automaton"," " +Automaton2.Text);
+                    command.Parameters.AddWithValue("@name", Automaton.Text);
+                    command.ExecuteNonQuery();
+
+                }
+            }
+            }
+            else
+            {
+
+            }
+        }
+
+        private void Button_Click2(object sender, RoutedEventArgs e)
+        {
+            Name.Text = string.Empty; Automaton.Text = string.Empty; Automaton2.Text = string.Empty; Automaton_serial.Text = string.Empty;
+
         }
     }
 }
