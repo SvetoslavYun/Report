@@ -26,6 +26,9 @@ using System.Windows.Threading;
 using Color = System.Drawing.Color;
 using System.Drawing;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using System.ComponentModel;
+using System.Text;
+using System.Windows.Data;
 
 namespace Report
 {
@@ -59,6 +62,15 @@ namespace Report
         {
             Collectors.Clear();
             foreach (var item in Collector2.GetAllCollector())
+            {
+                Collectors.Add(item);
+            }
+        }
+
+        public void FillData2()//заполнить список
+        {
+            Collectors.Clear();
+            foreach (var item in Collector2.GetAllCollector2())
             {
                 Collectors.Add(item);
             }
@@ -104,7 +116,7 @@ namespace Report
                     }
                   
                 }
-                FillData();
+                ClearGrid();
             }
         }
 
@@ -184,19 +196,7 @@ namespace Report
                     }
                 }
             }
-
- 
-                // Удаление строк 2, 3 и 4
-
-                Range row2 = (Range)sheet1.Rows[2];
-            row2.Delete();
-
-            Range row3 = (Range)sheet1.Rows[3];
-            row3.Delete();
-
-            Range row4 = (Range)sheet1.Rows[4];
-            row4.Delete();
-
+       
             // Автоматическое подгонение ширины колонок под содержимое
             for (int j = 1; j <= dGrid.Columns.Count + 1; j++)
             {
@@ -332,7 +332,7 @@ namespace Report
             
             }
 
-            FillData();
+            ClearGrid();
         }
 
        
@@ -443,18 +443,26 @@ namespace Report
                                 power = reader2.GetString(7);
                             }
 
-                            if (name == "-2146826265" || name == "" || name == "старший бригады инкассаторов" || name == "инкассатор-сборщик" || name == "водитель автомобиля" || name == "Фамилия и инициалы работника службы инкассации" || name == " " || name == "  " || name == "Резеерв" || name == "Резерв")
+                            if (name == "-2146826265" || name == "" || name == "старший бригады инкассаторов" || name == "инкассатор-сборщик" || name == "водитель автомобиля" || name == "Фамилия и инициалы работника службы инкассации" || name == " " || name == "  " || name == "Резеерв" || name == "Резерв" || name == "НАРЯД НА РАБОТУ на " || name == "Служба инкассации" || name == "Дежурный водитель № 2" || name == "Дежурный водитель № 1" || name == "Регионального управления № 1 г.Минска ОАО \"НКФО \"Белинкасгрупп\"")
                             {
                                 continue;
                             }
-                            if (name != ".")
+                            if (name == "." || name == "Начальник службы инкассации" || name == "стажер")
+                            {// закрытие книги Excel
+                                workbook.Close(false);
+
+                                // закрытие приложения Excel
+                                excel.Quit();
+                               
+                            }
+                            else
                             {
                                 if (name2 == name) { automaton = " " + automaton; } else { automaton = automaton; }
                                 if (b == 2) { automatonSerial = name; certificate = name; name = ""; }
                                 if (c == 2) { automaton = automaton; name2 = name; } else { automaton = ""; }
                                 if (d == 2) { power = power; } else { power = ""; }
 
-                         
+
                                 // привязка значений параметров в SQL-запрос вставки данных
                                 command.Parameters["@Name"].Value = name;
                                 command.Parameters["@Gun"].Value = gun;
@@ -472,13 +480,6 @@ namespace Report
                                 c = 0; d = 0;
                                 reader2.Close();
                             }
-                            else
-                            {  // закрытие книги Excel
-                                workbook.Close(false);
-
-                                // закрытие приложения Excel
-                                excel.Quit();
-                            }
                         }
                     }
 
@@ -492,7 +493,7 @@ namespace Report
         }
 
 
-     
+
 
         //private void ImportExcelToDatabase(string filePath)
         //{
@@ -617,43 +618,141 @@ namespace Report
 
         //}
 
+        private string GetFilteredGridString(DataGrid grid, string filterText)
+        {
+            // Применяем фильтр к DataGrid
+            ICollectionView view = CollectionViewSource.GetDefaultView(grid.ItemsSource);
+            view.Filter = item =>
+            {
+                if (string.IsNullOrEmpty(filterText))
+                    return true;
+
+                Collector2 collector = item as Collector2;
+                return collector.Name.Contains(filterText);
+            };
+
+            // Формируем строку таблицы
+            StringBuilder sb = new StringBuilder();
+
+            foreach (DataGridColumn column in grid.Columns)
+            {
+                sb.Append(column.Header);
+                sb.Append("\t");
+            }
+            sb.Append(Environment.NewLine);
+
+            foreach (Collector2 collector in grid.Items)
+            {
+                sb.Append(collector.Id);
+                sb.Append("\t");
+                sb.Append(collector.Name);
+                sb.Append("\t");
+                sb.Append(collector.Gun);
+                sb.Append("\t");
+                sb.Append(collector.Automaton_serial);
+                sb.Append("\t");
+                sb.Append(collector.Automaton);
+                sb.Append("\t");
+                sb.Append(collector.Permission);
+                sb.Append("\t");
+                sb.Append(collector.Meaning);
+                sb.Append("\t");
+                sb.Append(collector.Certificate);
+                sb.Append("\t");
+                sb.Append(collector.Token);
+                sb.Append("\t");
+                sb.Append(collector.Power);
+                sb.Append("\t");
+                sb.Append(collector.Armor);
+                sb.Append(Environment.NewLine);
+            }
+
+            // Снимаем фильтр с DataGrid
+            view.Filter = null;
+
+            return sb.ToString();
+        }
+
+
+
+
         private void SearchButton_Click(object sender, TextChangedEventArgs e)
         {
             try
             {
-                // строка подключения к базе данных SQLite
-                string connectionString = @"Data Source=Uspeh.db;Version=3;";
-                string searchTerm = Name.Text;
-                List<Collector2> collectors = new List<Collector2>();
-
-                using (var connection = new SQLiteConnection(connectionString))
+                if (Name.Text == "повторы") 
                 {
-                    connection.Open();
+                    // строка подключения к базе данных SQLite
+                    string connectionString = @"Data Source=Uspeh.db;Version=3;";
+                    string searchTerm = Name.Text;
+                    List<Collector2> collectors = new List<Collector2>();
 
-                    var command = new SQLiteCommand($"SELECT * FROM collectors2 WHERE name LIKE '%{searchTerm}%'", connection);
-                    var reader = command.ExecuteReader();
-
-                    while (reader.Read())
+                    using (var connection = new SQLiteConnection(connectionString))
                     {
-                        Collector2 collector = new Collector2
-                        {
-                            Id = Convert.ToInt32(reader["id"]),
-                            Name = reader["name"].ToString(),
-                            Gun = reader["gun"].ToString(),
-                            Automaton_serial = reader["automaton_serial"].ToString(),
-                            Automaton = reader["automaton"].ToString(),
-                            Permission = reader["permission"].ToString(),
-                            Meaning = reader["meaning"].ToString(),
-                            Certificate = reader["certificate"].ToString(),
-                            Token = reader["token"].ToString(),
-                            Power = reader["power"].ToString(),
-                            Armor = reader["armor"].ToString()
-                        };
-                        collectors.Add(collector);
-                    }
-                }
+                        connection.Open();
 
-                dGrid.ItemsSource = collectors;
+                        var command = new SQLiteCommand($"SELECT * FROM Collectors2 where Automaton !='' GROUP BY Automaton HAVING COUNT(*) > 1  ", connection);
+                        var reader = command.ExecuteReader();
+
+                        while (reader.Read())
+                        {
+                            Collector2 collector = new Collector2
+                            {
+                                Id = Convert.ToInt32(reader["id"]),
+                                Name = reader["name"].ToString(),
+                                Gun = reader["gun"].ToString(),
+                                Automaton_serial = reader["automaton_serial"].ToString(),
+                                Automaton = reader["automaton"].ToString(),
+                                Permission = reader["permission"].ToString(),
+                                Meaning = reader["meaning"].ToString(),
+                                Certificate = reader["certificate"].ToString(),
+                                Token = reader["token"].ToString(),
+                                Power = reader["power"].ToString(),
+                                Armor = reader["armor"].ToString()
+                            };
+                            collectors.Add(collector);
+                        }
+                    }
+
+                    dGrid.ItemsSource = collectors;
+                }
+            
+                else
+                {
+                    // строка подключения к базе данных SQLite
+                    string connectionString = @"Data Source=Uspeh.db;Version=3;";
+                    string searchTerm = Name.Text;
+                    List<Collector2> collectors = new List<Collector2>();
+
+                    using (var connection = new SQLiteConnection(connectionString))
+                    {
+                        connection.Open();
+
+                        var command = new SQLiteCommand($"SELECT * FROM collectors2 WHERE name LIKE '%{searchTerm}%'", connection);
+                        var reader = command.ExecuteReader();
+
+                        while (reader.Read())
+                        {
+                            Collector2 collector = new Collector2
+                            {
+                                Id = Convert.ToInt32(reader["id"]),
+                                Name = reader["name"].ToString(),
+                                Gun = reader["gun"].ToString(),
+                                Automaton_serial = reader["automaton_serial"].ToString(),
+                                Automaton = reader["automaton"].ToString(),
+                                Permission = reader["permission"].ToString(),
+                                Meaning = reader["meaning"].ToString(),
+                                Certificate = reader["certificate"].ToString(),
+                                Token = reader["token"].ToString(),
+                                Power = reader["power"].ToString(),
+                                Armor = reader["armor"].ToString()
+                            };
+                            collectors.Add(collector);
+                        }
+                    }
+
+                    dGrid.ItemsSource = collectors;
+                }
             }
             catch (Exception ex)
             {
@@ -778,11 +877,11 @@ namespace Report
                             selectedCollector.Update();
                         }
                     }
-                    FillData(); // обновляем данные в таблице после обновления
+                    ClearGrid(); // обновляем данные в таблице после обновления
                 }
                 else
                 {
-                    FillData();
+                    ClearGrid();
                 }
             }
             catch (Exception ex)
@@ -917,6 +1016,12 @@ namespace Report
             {
 
             }
+        }
+
+        private void ClearGrid()
+        {
+            Name.Text = "  "; 
+            Name.Text = string.Empty; 
         }
 
         private void Button_Click2(object sender, RoutedEventArgs e)

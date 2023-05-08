@@ -85,6 +85,48 @@ namespace Report
         }
 
 
+        public static IEnumerable<Collector2> GetAllCollector2()
+        {
+            var commandString = "SELECT * FROM Collectors2 GROUP BY Automaton HAVING COUNT(*) > 1";
+            SQLiteCommand getAllCommand = new SQLiteCommand(commandString, connection);
+            connection.Open();
+            var reader = getAllCommand.ExecuteReader();
+            if (reader.HasRows)
+            {
+                while (reader.Read())
+                {
+                    var id = reader.GetInt32(0);
+                    var name = reader.GetString(1);
+                    var gun = reader.GetString(2);
+                    var automaton_serial = reader.GetString(3);
+                    var automaton = reader.GetString(4);
+                    var permission = reader.GetString(5);
+                    var meaning = reader.GetString(6);
+                    var certificate = reader.GetString(7);
+                    var token = reader.GetString(8);
+                    var power = reader.GetString(9);
+                    var armor = reader.GetString(10);
+                    var collector = new Collector2
+                    {
+                        Id = id,
+                        Name = name,
+                        Gun = gun,
+                        Automaton_serial = automaton_serial,
+                        Automaton = automaton,
+                        Permission = permission,
+                        Meaning = meaning,
+                        Certificate = certificate,
+                        Token = token,
+                        Power = power,
+                        Armor = armor,
+                    };
+                    yield return collector;
+                }
+            };
+            connection.Close();
+        }
+
+
         public void Update()
         {
             var commandString = "UPDATE Collectors2 SET Name=@name, Gun=@gun, Automaton_serial=@automaton_serial, Automaton=@automaton, Permission=@permission, Meaning=@meaning, Certificate=@certificate, Token=@token, Power=@power, Armor=@armor WHERE(Id = @id)";

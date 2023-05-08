@@ -88,9 +88,9 @@ namespace Report
                         }
                     }
                 }
-                FillData();
+                ClearGrid();
             }
-            FillData();
+           
         }
 
 
@@ -212,37 +212,46 @@ namespace Report
             return child;
         }
 
-        private void btnAdd__Click2(object sender, RoutedEventArgs e)
-        {
-            BD_Form bd_Form = new BD_Form();
-            bd_Form.Owner = this;//первичное окно назначаем главным
-            bd_Form.Show();//ждет закрытия окна
-            FillData();
-        }
+        //private void btnAdd__Click2(object sender, RoutedEventArgs e)
+        //{
+        //    try
+        //    {
+        //        BD_Form bd_Form = new BD_Form();
+        //    bd_Form.Owner = this;//первичное окно назначаем главным
+        //    bd_Form.Show();//ждет закрытия окна
+        //        ClearGrid();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show(ex.Message);
+        //    }
+        //}
 
 
-           private void btnAdd__Click(object sender, RoutedEventArgs e)
+        private void btnAdd__Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 Collector collector = new Collector
-            {
-                Name = "",
-                Gun = "",
-                Automaton_serial = "",
-                Automaton = "",
-                Permission = "",
-                Meaning = "",
-                Certificate = "",
-                Token = "",
-                Power = ""
-            };
-            collector.Insert();
-            var collectors = dGrid.ItemsSource as ObservableCollection<Collector>;
-            collectors?.Add(collector);
-            int lastIndex = collectors.Count - 1;
-            dGrid.SelectedItem = collectors[lastIndex];
-            dGrid.ScrollIntoView(dGrid.SelectedItem);
+                {
+                    Name = "",
+                    Gun = "",
+                    Automaton_serial = "",
+                    Automaton = "",
+                    Permission = "",
+                    Meaning = "",
+                    Certificate = "",
+                    Token = "",
+                    Power = ""
+                };
+                collector.Insert();
+                var collectors = dGrid.ItemsSource as ObservableCollection<Collector>;
+                collectors?.Add(collector);
+
+                ClearGrid();
+
+                // прокручиваем к последней строке
+                ScrollToLastRow(dGrid);
             }
             catch (Exception ex)
             {
@@ -250,25 +259,43 @@ namespace Report
             }
         }
 
-     
 
+
+        private void ScrollToLastRow(DataGrid dataGrid)
+        {
+            if (dataGrid.Items.Count > 0)
+            {
+                object item = dataGrid.Items[dataGrid.Items.Count - 1];
+                dataGrid.ScrollIntoView(item);
+                dataGrid.SelectedItem = item;
+                dataGrid.UpdateLayout();
+            }
+        }
 
 
 
         private void btnImport_Clickbtn(object sender, RoutedEventArgs e)
         {
-            // создание диалогового окна для выбора файла Excel
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "Excel Files|*.xls;*.xlsx;*.xlsm";
-
-            // проверка, был ли выбран файл
-            if (openFileDialog.ShowDialog() == true)
+            try
             {
-                // вызов метода для импорта данных из Excel в базу данных
-                ImportExcelToDatabase(openFileDialog.FileName);
-            }
+                // создание диалогового окна для выбора файла Excel
+                OpenFileDialog openFileDialog = new OpenFileDialog();
+                openFileDialog.Filter = "Excel Files|*.xls;*.xlsx;*.xlsm";
 
-            FillData();
+                // проверка, был ли выбран файл
+                if (openFileDialog.ShowDialog() == true)
+                {
+                    // вызов метода для импорта данных из Excel в базу данных
+                    ImportExcelToDatabase(openFileDialog.FileName);
+                }
+
+                ClearGrid();
+                MessageBox.Show("Данные добавленны");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void ImportExcelToDatabase(string filePath)
@@ -390,11 +417,11 @@ namespace Report
                             selectedCollector.Update();
                         }
                     }
-                    FillData(); // обновляем данные в таблице после обновления
+                    ClearGrid(); // обновляем данные в таблице после обновления
                 }
                 else
                 {
-                    FillData();
+                    ClearGrid();
                 }
             }
             catch (Exception ex)
@@ -479,6 +506,15 @@ namespace Report
                 MessageBox.Show(ex.Message);
             }
         }
+
+
+        private void ClearGrid()
+        {
+            Name.Text = "  "; 
+            Name.Text = string.Empty;
+
+        }
+
 
     }
 }
